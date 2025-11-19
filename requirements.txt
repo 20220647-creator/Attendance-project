@@ -1,0 +1,12 @@
+deepface==0.0.93
+opencv-python==4.10.0.84
+numpy==1.26.4
+pandas==2.2.3
+Pillow==10.4.0
+tensorflow==2.17.1
+mtcnn==1.0.0
+retina-face==0.0.17
+sqlalchemy==2.0.35
+python-dotenv==1.0.1
+tf-keras==2.17.0
+
