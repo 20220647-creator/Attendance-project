@@ -333,12 +333,14 @@ class AttendanceApplication:
                 print(f"\nStudent: {result['student_name']} ({result['student_id']})")
                 print(f"Confidence: {result['confidence']:.2%}")
                 print(f"Model: {result['model_used']}")
+
+                # Clean up temp file on success
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
             else:
                 self.view.display_error(result['message'])
-
-            # Clean up temp file
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
+                # Keep temp file for debugging when failed
+                print(f"\n💡 Tip: Temp image saved at {temp_path} for debugging")
         else:
             self.view.display_error("No image captured")
 

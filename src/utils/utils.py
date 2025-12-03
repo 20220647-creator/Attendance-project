@@ -141,9 +141,12 @@ class CameraUtility:
 
             # Draw face detection box
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-            face_cascade = cv2.CascadeClassifier(
-                cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
-            )
+            # Use local cascade file to avoid Unicode path issues
+            cascade_path = os.path.join('data', 'models', 'haarcascade_frontalface_default.xml')
+            if not os.path.exists(cascade_path):
+                # Fallback to OpenCV default path
+                cascade_path = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+            face_cascade = cv2.CascadeClassifier(cascade_path)
             faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
             for (x, y, w, h) in faces:
@@ -201,10 +204,12 @@ class CameraUtility:
             Number of faces detected
         """
         try:
-            # Load cascade classifier
-            face_cascade = cv2.CascadeClassifier(
-                cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
-            )
+            # Load cascade classifier - use local path to avoid Unicode issues
+            cascade_path = os.path.join('data', 'models', 'haarcascade_frontalface_default.xml')
+            if not os.path.exists(cascade_path):
+                # Fallback to OpenCV default path
+                cascade_path = cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+            face_cascade = cv2.CascadeClassifier(cascade_path)
 
             # Read image
             image = cv2.imread(image_path)

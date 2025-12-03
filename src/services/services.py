@@ -213,7 +213,7 @@ class AttendanceService:
         attendance = AttendanceRecord(
             student_id=student_id,
             check_in_time=datetime.now(),
-            confidence_score=confidence_score,
+            confidence=confidence_score,
             model_used=model_used,
             status=status,
             session_date=today,
@@ -312,10 +312,18 @@ class FaceRecognitionService:
             model_name = self.context.get_model_name()
             threshold = config.get_threshold(model_name)
 
+            print(f"\n🔍 Recognition Debug:")
+            print(f"   Model: {model_name}")
+            print(f"   Threshold: {threshold}")
+            print(f"   Results found: {len(results) if results else 0}")
+
             if results and len(results) > 0 and len(results[0]) > 0:
                 # Get the best match
                 best_match = results[0].iloc[0]
                 distance = best_match['distance']
+
+                print(f"   Best match distance: {distance:.4f}")
+                print(f"   Confidence: {(1-distance):.2%}")
 
                 # Check if distance is below threshold
                 if distance < threshold:
@@ -323,47 +331,79 @@ class FaceRecognitionService:
                     identity_path = best_match['identity']
                     student_id = self._extract_student_id_from_path(identity_path)
 
+                    print(f"   ✓ Match found: {student_id}")
+
                     if student_id:
                         student = self.student_repository.get_by_id(student_id)
 
                         if student:
                             return FaceRecognitionResult(
+                                success=True,
                                 student_id=student.student_id,
-                                full_name=student.full_name,
+                                student_name=student.full_name,
                                 confidence=1 - distance,  # Convert distance to confidence
                                 distance=distance,
                                 model_used=model_name,
-                                is_recognized=True
+                                face_detected=True
                             )
+                else:
+                    print(f"   ✗ Distance {distance:.4f} > threshold {threshold:.4f}")
+                    print(f"   Tip: Face found but similarity too low. Try:")
+                    print(f"        - Re-register with better quality images")
+                    print(f"        - Use different model (Facenet512 recommended)")
+            else:
+                print(f"   ✗ No faces detected in database match")
+                print(f"   Possible causes:")
+                print(f"     - Webcam image quality different from registered images")
+                print(f"     - Face angle/expression too different")
+                print(f"     - Try switching model (ArcFace works best: 99% accuracy)")
+                print(f"     - Consider re-registering with webcam images")
 
             # No match found
             return FaceRecognitionResult(
+                success=False,
                 student_id=None,
-                full_name=None,
+                student_name=None,
                 confidence=0.0,
                 distance=1.0,
                 model_used=model_name,
-                is_recognized=False
+                face_detected=True
             )
 
         except Exception as e:
             print(f"Error in face recognition: {str(e)}")
             return FaceRecognitionResult(
+                success=False,
                 student_id=None,
-                full_name=None,
+                student_name=None,
                 confidence=0.0,
                 distance=1.0,
                 model_used=self.context.get_model_name(),
-                is_recognized=False
+                error_message=str(e),
+                face_detected=True
             )
 
     def _extract_student_id_from_path(self, path: str) -> Optional[str]:
         """Extract student ID from file path"""
         # Path format: data/students/STUDENT_ID/STUDENT_ID.ext
-        parts = path.split(os.sep)
+        # Normalize path separators (handle both / and \)
+        normalized_path = path.replace('\\', '/')
+        parts = normalized_path.split('/')
+
         for i, part in enumerate(parts):
             if part == 'students' and i + 1 < len(parts):
-                return parts[i + 1]
+                student_id = parts[i + 1]
+                # Debug print
+                print(f"   Extracted student_id: {student_id}")
+                return student_id
+
+        # Fallback: try to extract from filename
+        filename = os.path.basename(path)
+        if '_' in filename:
+            student_id = filename.split('_')[0]
+            print(f"   Extracted student_id from filename: {student_id}")
+            return student_id
+
         return None
 
     def verify_student(self, image_path: str, student_id: str) -> Dict[str, Any]:

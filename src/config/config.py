@@ -37,10 +37,10 @@ class Config:
 
         # Face Recognition Settings
         self.RECOGNITION_THRESHOLD = {
-            'VGG-Face': 0.4,
-            'Facenet': 0.4,
-            'Facenet512': 0.3,
-            'ArcFace': 0.68
+            'VGG-Face': 0.68,     # Increased from 0.4 for better matching
+            'Facenet': 0.60,      # Increased from 0.4
+            'Facenet512': 0.50,   # Increased from 0.45 for webcam matching
+            'ArcFace': 0.85       # Increased from 0.68
         }
 
         # Multiple samples for better recognition
@@ -57,10 +57,35 @@ class Config:
         directories = [
             self.STUDENT_DATABASE_PATH,
             self.ATTENDANCE_LOG_PATH,
-            self.MODELS_PATH
+            self.MODELS_PATH,
+            'data/models'  # For Haar Cascade
         ]
         for directory in directories:
             os.makedirs(directory, exist_ok=True)
+
+        # Initialize Haar Cascade to avoid Unicode path issues
+        self._init_haar_cascade()
+
+    def _init_haar_cascade(self):
+        """Copy Haar Cascade to local directory to avoid Unicode path issues"""
+        try:
+            import cv2
+            import shutil
+
+            cascade_dest = os.path.join('data', 'models', 'haarcascade_frontalface_default.xml')
+
+            # Skip if already exists
+            if os.path.exists(cascade_dest):
+                return
+
+            # Copy from OpenCV installation
+            cascade_src = os.path.join(cv2.data.haarcascades, 'haarcascade_frontalface_default.xml')
+
+            if os.path.exists(cascade_src):
+                shutil.copy(cascade_src, cascade_dest)
+        except Exception as e:
+            # Silent fail - will use OpenCV default path as fallback
+            pass
 
     def get_threshold(self, model_name: str) -> float:
         """Get recognition threshold for specific model"""

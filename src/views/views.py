@@ -103,7 +103,7 @@ class ConsoleView:
         print(f"Date:         {record.session_date}")
         print(f"Check-in:     {record.check_in_time.strftime('%H:%M:%S')}")
         print(f"Status:       {record.status.upper()}")
-        print(f"Confidence:   {record.confidence_score:.2%}" if record.confidence_score else "Confidence:   N/A")
+        print(f"Confidence:   {record.confidence:.2%}" if record.confidence else "Confidence:   N/A")
         print(f"Model:        {record.model_used}")
         print(f"Notes:        {record.notes or 'N/A'}")
         print("-"*60)
@@ -124,7 +124,7 @@ class ConsoleView:
 
         for record in records:
             check_in = record.check_in_time.strftime('%Y-%m-%d %H:%M:%S')
-            confidence = f"{record.confidence_score:.2%}" if record.confidence_score else "N/A"
+            confidence = f"{record.confidence:.2%}" if record.confidence else "N/A"
             print(f"{record.student_id:<15} {check_in:<20} {record.status:<12} {confidence:<12} {record.model_used:<20}")
 
         print("="*100)
@@ -153,7 +153,7 @@ class ConsoleView:
             rec_result = result['result']
             print(f"✓ RECOGNIZED")
             print(f"Student ID:   {rec_result.student_id}")
-            print(f"Name:         {rec_result.full_name}")
+            print(f"Name:         {rec_result.student_name}")
             print(f"Confidence:   {rec_result.confidence:.2%}")
             print(f"Distance:     {rec_result.distance:.4f}")
             print(f"Model Used:   {rec_result.model_used}")

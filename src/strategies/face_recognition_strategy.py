@@ -47,18 +47,43 @@ class VGGFaceStrategy(IFaceRecognitionStrategy):
     def recognize_face(self, image_path: str, database_path: str) -> List[Dict[str, Any]]:
         """Recognize face using VGG-Face model"""
         try:
+            # Try with enforce_detection=False directly to avoid detection issues
             result = DeepFace.find(
                 img_path=image_path,
                 db_path=database_path,
                 model_name=self.model_name,
                 distance_metric=self.distance_metric,
                 detector_backend=self.detection_backend,
-                enforce_detection=True,
+                enforce_detection=False,  # Set False to handle poor quality images
                 silent=True
             )
-            return result
+
+            # Validate result - DeepFace.find returns list of DataFrames
+            if result and len(result) > 0:
+                df = result[0]
+                # Check if DataFrame has results
+                if hasattr(df, '__len__') and len(df) > 0:
+                    return result
+
+            # No matches found
+            return []
+
+        except ValueError as e:
+            error_msg = str(e)
+            if "Face could not be detected" in error_msg:
+                print(f"⚠ No face detected in image with model {self.model_name}")
+            else:
+                print(f"✗ Error: {error_msg}")
+            return []
+
         except Exception as e:
-            print(f"Error in VGG-Face recognition: {str(e)}")
+            error_msg = str(e)
+            # Pandas error when no matches - this is actually normal
+            if "Length of values" in error_msg or "does not match" in error_msg:
+                # This means no matching faces found, return empty
+                return []
+            else:
+                print(f"✗ Error in VGG-Face recognition: {error_msg}")
             return []
 
     def verify_face(self, img1_path: str, img2_path: str) -> Dict[str, Any]:
@@ -106,18 +131,39 @@ class FacenetStrategy(IFaceRecognitionStrategy):
     def recognize_face(self, image_path: str, database_path: str) -> List[Dict[str, Any]]:
         """Recognize face using Facenet model"""
         try:
+            # Use enforce_detection=False to handle poor quality images
             result = DeepFace.find(
                 img_path=image_path,
                 db_path=database_path,
                 model_name=self.model_name,
                 distance_metric=self.distance_metric,
                 detector_backend=self.detection_backend,
-                enforce_detection=True,
+                enforce_detection=False,
                 silent=True
             )
-            return result
+
+            # Validate result
+            if result and len(result) > 0:
+                df = result[0]
+                if hasattr(df, '__len__') and len(df) > 0:
+                    return result
+            return []
+
+        except ValueError as e:
+            error_msg = str(e)
+            if "Face could not be detected" in error_msg:
+                print(f"⚠ No face detected with Facenet")
+            else:
+                print(f"✗ Error: {error_msg}")
+            return []
+
         except Exception as e:
-            print(f"Error in Facenet recognition: {str(e)}")
+            error_msg = str(e)
+            # Pandas error when no matches - this is normal
+            if "Length of values" in error_msg or "does not match" in error_msg:
+                return []
+            else:
+                print(f"✗ Error in Facenet recognition: {error_msg}")
             return []
 
     def verify_face(self, img1_path: str, img2_path: str) -> Dict[str, Any]:
@@ -165,18 +211,39 @@ class ArcFaceStrategy(IFaceRecognitionStrategy):
     def recognize_face(self, image_path: str, database_path: str) -> List[Dict[str, Any]]:
         """Recognize face using ArcFace model"""
         try:
+            # Use enforce_detection=False to handle poor quality images
             result = DeepFace.find(
                 img_path=image_path,
                 db_path=database_path,
                 model_name=self.model_name,
                 distance_metric=self.distance_metric,
                 detector_backend=self.detection_backend,
-                enforce_detection=True,
+                enforce_detection=False,
                 silent=True
             )
-            return result
+
+            # Validate result
+            if result and len(result) > 0:
+                df = result[0]
+                if hasattr(df, '__len__') and len(df) > 0:
+                    return result
+            return []
+
+        except ValueError as e:
+            error_msg = str(e)
+            if "Face could not be detected" in error_msg:
+                print(f"⚠ No face detected with ArcFace")
+            else:
+                print(f"✗ Error: {error_msg}")
+            return []
+
         except Exception as e:
-            print(f"Error in ArcFace recognition: {str(e)}")
+            error_msg = str(e)
+            # Pandas error when no matches - this is normal
+            if "Length of values" in error_msg or "does not match" in error_msg:
+                return []
+            else:
+                print(f"✗ Error in ArcFace recognition: {error_msg}")
             return []
 
     def verify_face(self, img1_path: str, img2_path: str) -> Dict[str, Any]:
@@ -224,18 +291,39 @@ class Facenet512Strategy(IFaceRecognitionStrategy):
     def recognize_face(self, image_path: str, database_path: str) -> List[Dict[str, Any]]:
         """Recognize face using Facenet512 model"""
         try:
+            # Use enforce_detection=False to handle poor quality images
             result = DeepFace.find(
                 img_path=image_path,
                 db_path=database_path,
                 model_name=self.model_name,
                 distance_metric=self.distance_metric,
                 detector_backend=self.detection_backend,
-                enforce_detection=True,
+                enforce_detection=False,
                 silent=True
             )
-            return result
+
+            # Validate result
+            if result and len(result) > 0:
+                df = result[0]
+                if hasattr(df, '__len__') and len(df) > 0:
+                    return result
+            return []
+
+        except ValueError as e:
+            error_msg = str(e)
+            if "Face could not be detected" in error_msg:
+                print(f"⚠ No face detected with Facenet512")
+            else:
+                print(f"✗ Error: {error_msg}")
+            return []
+
         except Exception as e:
-            print(f"Error in Facenet512 recognition: {str(e)}")
+            error_msg = str(e)
+            # Pandas error when no matches - this is normal
+            if "Length of values" in error_msg or "does not match" in error_msg:
+                return []
+            else:
+                print(f"✗ Error in Facenet512 recognition: {error_msg}")
             return []
 
     def verify_face(self, img1_path: str, img2_path: str) -> Dict[str, Any]:

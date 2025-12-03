@@ -252,7 +252,7 @@ class AttendanceController:
             # Recognize face
             result = self.recognition_service.recognize_student(image_path)
 
-            if not result.is_recognized:
+            if not result.success:
                 return {
                     'success': False,
                     'message': 'No student recognized in the image',
@@ -270,9 +270,9 @@ class AttendanceController:
 
                 return {
                     'success': True,
-                    'message': f'Attendance marked for {result.full_name}',
+                    'message': f'Attendance marked for {result.student_name}',
                     'student_id': result.student_id,
-                    'student_name': result.full_name,
+                    'student_name': result.student_name,
                     'confidence': result.confidence,
                     'model_used': result.model_used,
                     'attendance': attendance
@@ -436,7 +436,7 @@ class FaceRecognitionController:
 
             return {
                 'success': True,
-                'recognized': result.is_recognized,
+                'recognized': result.success,
                 'result': result
             }
         except Exception as e:
