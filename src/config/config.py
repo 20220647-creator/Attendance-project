@@ -36,12 +36,16 @@ class Config:
         self.MODELS_PATH = 'models'
 
         # Face Recognition Settings
+        # STRICTER thresholds to prevent false positives (wrong person matches)
         self.RECOGNITION_THRESHOLD = {
-            'VGG-Face': 0.68,     # Increased from 0.4 for better matching
-            'Facenet': 0.60,      # Increased from 0.4
-            'Facenet512': 0.50,   # Increased from 0.45 for webcam matching
-            'ArcFace': 0.85       # Increased from 0.68
+            'VGG-Face': 0.50,     # Stricter: was 0.68 - prevents matching wrong faces
+            'Facenet': 0.45,      # Stricter: was 0.60 - better accuracy
+            'Facenet512': 0.40,   # Stricter: was 0.50 - most accurate
+            'ArcFace': 0.68       # Stricter: was 0.85 - prevents false matches
         }
+
+        # Minimum confidence required for attendance (0.6 = 60%)
+        self.MIN_CONFIDENCE_FOR_ATTENDANCE = 0.60
 
         # Multiple samples for better recognition
         self.NUM_FACE_SAMPLES = 10  # Number of sample images to capture per student

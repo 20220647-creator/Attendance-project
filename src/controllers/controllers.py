@@ -466,3 +466,157 @@ class FaceRecognitionController:
                 'message': f'Error in face verification: {str(e)}'
             }
 
+
+class DataAugmentationController:
+    """Controller for data augmentation operations"""
+
+    def __init__(self):
+        from src.utils.data_augmentation import FaceDataAugmentation, augment_existing_dataset
+        from src.config.config import config
+        self.augmentor = FaceDataAugmentation()
+        self.augment_existing_dataset = augment_existing_dataset
+        self.data_dir = config.STUDENT_DATABASE_PATH
+
+    def augment_student(self, student_id: str, num_augmented: int = 5) -> Dict[str, Any]:
+        """
+        Augment images for a specific student
+
+        Args:
+            student_id: Student ID
+            num_augmented: Number of augmented images per original image
+
+        Returns:
+            Dictionary with results
+        """
+        try:
+            student_dir = os.path.join(self.data_dir, student_id)
+
+            if not os.path.exists(student_dir):
+                return {
+                    'success': False,
+                    'message': f'Student {student_id} not found'
+                }
+
+            # Count original images
+            original_count = len([f for f in os.listdir(student_dir)
+                                 if f.lower().endswith(('.jpg', '.jpeg', '.png'))
+                                 and not f.startswith('aug_')])
+
+            if original_count == 0:
+                return {
+                    'success': False,
+                    'message': f'No images found for student {student_id}'
+                }
+
+            # Augment
+            created = self.augmentor.augment_student_images(
+                student_dir,
+                num_augmented=num_augmented
+            )
+
+            return {
+                'success': True,
+                'message': f'Created {created} augmented images for {student_id}',
+                'student_id': student_id,
+                'original_images': original_count,
+                'augmented_images': created,
+                'total_images': original_count + created
+            }
+
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f'Error augmenting student data: {str(e)}'
+            }
+
+    def augment_all_students(self, num_augmented: int = 5) -> Dict[str, Any]:
+        """
+        Augment images for all students
+
+        Args:
+            num_augmented: Number of augmented images per original image
+
+        Returns:
+            Dictionary with statistics
+        """
+        try:
+            if not os.path.exists(self.data_dir):
+                return {
+                    'success': False,
+                    'message': f'Data directory not found: {self.data_dir}'
+                }
+
+            stats = self.augment_existing_dataset(
+                self.data_dir,
+                augmentation_per_image=num_augmented
+            )
+
+            return {
+                'success': True,
+                'message': f'Augmented {stats["students_processed"]} students',
+                'stats': stats
+            }
+
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f'Error augmenting dataset: {str(e)}'
+            }
+
+    def clean_augmented_images(self, student_id: str = None) -> Dict[str, Any]:
+        """
+        Remove all augmented images
+
+        Args:
+            student_id: Student ID (None = all students)
+
+        Returns:
+            Dictionary with results
+        """
+        try:
+            deleted_count = 0
+
+            if student_id:
+                # Clean specific student
+                student_dir = os.path.join(self.data_dir, student_id)
+                if not os.path.exists(student_dir):
+                    return {
+                        'success': False,
+                        'message': f'Student {student_id} not found'
+                    }
+
+                for filename in os.listdir(student_dir):
+                    if filename.startswith('aug_'):
+                        file_path = os.path.join(student_dir, filename)
+                        os.remove(file_path)
+                        deleted_count += 1
+
+                return {
+                    'success': True,
+                    'message': f'Deleted {deleted_count} augmented images for {student_id}',
+                    'deleted_count': deleted_count
+                }
+            else:
+                # Clean all students
+                for student_folder in os.listdir(self.data_dir):
+                    student_dir = os.path.join(self.data_dir, student_folder)
+                    if not os.path.isdir(student_dir):
+                        continue
+
+                    for filename in os.listdir(student_dir):
+                        if filename.startswith('aug_'):
+                            file_path = os.path.join(student_dir, filename)
+                            os.remove(file_path)
+                            deleted_count += 1
+
+                return {
+                    'success': True,
+                    'message': f'Deleted {deleted_count} augmented images from all students',
+                    'deleted_count': deleted_count
+                }
+
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f'Error cleaning augmented images: {str(e)}'
+            }

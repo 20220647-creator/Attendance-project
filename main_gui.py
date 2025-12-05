@@ -17,7 +17,12 @@ if sys.platform == 'win32':
     except:
         pass
 
-from src.controllers.controllers import StudentController, AttendanceController, FaceRecognitionController
+from src.controllers.controllers import (
+    StudentController,
+    AttendanceController,
+    FaceRecognitionController,
+    DataAugmentationController
+)
 from src.views.tkinter_views import TkinterView
 from src.utils.utils import CameraUtility, ImageValidator
 from src.config.config import config
@@ -31,6 +36,7 @@ class AttendanceApplicationGUI:
         self.student_controller = StudentController()
         self.attendance_controller = AttendanceController()
         self.face_controller = FaceRecognitionController()
+        self.augmentation_controller = DataAugmentationController()
         self.view = TkinterView(root)
         self.running = True
         self.current_model = config.DEFAULT_MODEL
@@ -63,6 +69,9 @@ class AttendanceApplicationGUI:
             '13': self.change_model,
             '14': self.view_models,
             '15': self.test_recognition,
+            '16': self.augment_student_data,
+            '17': self.augment_all_students_data,
+            '18': self.clean_augmented_data,
             '0': self.exit_application
         }
 
@@ -446,6 +455,124 @@ class AttendanceApplicationGUI:
                 self.view.display_error(result['message'])
         else:
             self.view.display_error("No image provided or file not found")
+
+    def augment_student_data(self):
+        """Augment data for a single student"""
+        student_id = self.view.get_input("Enter Student ID")
+        if not student_id:
+            return
+
+        # Ask for number of augmented images
+        num_str = self.view.get_input("Number of augmented images per original (default: 5)")
+        try:
+            num_augmented = int(num_str) if num_str else 5
+            if num_augmented < 1 or num_augmented > 20:
+                self.view.display_error("Number must be between 1 and 20")
+                return
+        except ValueError:
+            self.view.display_error("Invalid number")
+            return
+
+        # Confirm
+        confirm = messagebox.askyesno(
+            "Confirm Augmentation",
+            f"This will create {num_augmented} augmented images per original image for student {student_id}.\n\n"
+            "This improves recognition accuracy!\n\nContinue?"
+        )
+
+        if not confirm:
+            return
+
+        self.view.show_processing("Augmenting data... Please wait.")
+
+        result = self.augmentation_controller.augment_student(student_id, num_augmented)
+
+        if result['success']:
+            message = f"{result['message']}\n\n"
+            message += f"Original images: {result['original_images']}\n"
+            message += f"Augmented images: {result['augmented_images']}\n"
+            message += f"Total images now: {result['total_images']}"
+            self.view.display_success(message)
+        else:
+            self.view.display_error(result['message'])
+
+    def augment_all_students_data(self):
+        """Augment data for all students"""
+        # Ask for number of augmented images
+        num_str = self.view.get_input("Number of augmented images per original (default: 5)")
+        try:
+            num_augmented = int(num_str) if num_str else 5
+            if num_augmented < 1 or num_augmented > 20:
+                self.view.display_error("Number must be between 1 and 20")
+                return
+        except ValueError:
+            self.view.display_error("Invalid number")
+            return
+
+        # Confirm
+        confirm = messagebox.askyesno(
+            "Confirm Mass Augmentation",
+            f"This will augment data for ALL students!\n\n"
+            f"Creating {num_augmented} images per original.\n"
+            "This may take several minutes.\n\n"
+            "Continue?"
+        )
+
+        if not confirm:
+            return
+
+        self.view.show_processing("Augmenting all students... This may take a while.")
+
+        result = self.augmentation_controller.augment_all_students(num_augmented)
+
+        if result['success']:
+            stats = result['stats']
+            message = f"{result['message']}\n\n"
+            message += f"Students processed: {stats['students_processed']}\n"
+            message += f"Original images: {stats['original_images']}\n"
+            message += f"Augmented images: {stats['augmented_images']}\n"
+            message += f"Total images now: {stats['original_images'] + stats['augmented_images']}"
+
+            if stats['errors']:
+                message += f"\n\nErrors: {len(stats['errors'])}"
+
+            self.view.display_success(message)
+        else:
+            self.view.display_error(result['message'])
+
+    def clean_augmented_data(self):
+        """Clean augmented images"""
+        # Ask for scope
+        choice = messagebox.askquestion(
+            "Clean Scope",
+            "Clean all students?\n\nYes = All students\nNo = Single student",
+            icon='question'
+        )
+
+        student_id = None
+        if choice == 'no':
+            student_id = self.view.get_input("Enter Student ID")
+            if not student_id:
+                return
+
+        # Confirm
+        scope_text = "ALL STUDENTS" if not student_id else f"student {student_id}"
+        confirm = messagebox.askyesno(
+            "Confirm Deletion",
+            f"This will delete all augmented images for {scope_text}.\n\n"
+            "Original images will NOT be affected.\n\n"
+            "Continue?"
+        )
+
+        if not confirm:
+            return
+
+        result = self.augmentation_controller.clean_augmented_images(student_id)
+
+        if result['success']:
+            self.view.display_success(f"{result['message']}\n\nDeleted: {result['deleted_count']} files")
+        else:
+            self.view.display_error(result['message'])
 
     def exit_application(self):
         """Exit the application"""

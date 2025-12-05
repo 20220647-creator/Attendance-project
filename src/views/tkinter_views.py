@@ -91,6 +91,11 @@ class TkinterView:
                 ("11", "View student attendance history", self.primary_color),
                 ("12", "Generate attendance report", self.primary_color),
             ]),
+            ("DATA AUGMENTATION - VGGFace2 Inspired", [
+                ("16", "Augment student data (single)", "#9C27B0"),
+                ("17", "Augment all students data", "#9C27B0"),
+                ("18", "Clean augmented images", self.warning_color),
+            ]),
             ("SETTINGS", [
                 ("13", "Change recognition model", self.warning_color),
                 ("14", "View available models", self.primary_color),

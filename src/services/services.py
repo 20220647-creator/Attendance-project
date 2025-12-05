@@ -303,6 +303,19 @@ class FaceRecognitionService:
             FaceRecognitionResult object
         """
         try:
+            # First, validate that there are students with images in database
+            if not self._validate_database_has_images():
+                return FaceRecognitionResult(
+                    success=False,
+                    student_id=None,
+                    student_name=None,
+                    confidence=0.0,
+                    distance=1.0,
+                    model_used=self.context.get_model_name(),
+                    error_message="No students with face images found in database. Please register students first.",
+                    face_detected=True
+                )
+
             # Perform face recognition
             results = self.context.recognize_face(
                 image_path=image_path,
@@ -321,36 +334,53 @@ class FaceRecognitionService:
                 # Get the best match
                 best_match = results[0].iloc[0]
                 distance = best_match['distance']
+                confidence = 1 - distance
 
                 print(f"   Best match distance: {distance:.4f}")
-                print(f"   Confidence: {(1-distance):.2%}")
+                print(f"   Confidence: {confidence:.2%}")
 
-                # Check if distance is below threshold
-                if distance < threshold:
-                    # Extract student_id from identity path
-                    identity_path = best_match['identity']
-                    student_id = self._extract_student_id_from_path(identity_path)
+                # Extract student_id from identity path
+                identity_path = best_match['identity']
+                matched_student_id = self._extract_student_id_from_path(identity_path)
 
-                    print(f"   ✓ Match found: {student_id}")
+                print(f"   Matched ID: {matched_student_id}")
 
-                    if student_id:
-                        student = self.student_repository.get_by_id(student_id)
+                # STRICT VALIDATION: Check BOTH distance threshold AND minimum confidence
+                if distance < threshold and confidence >= config.MIN_CONFIDENCE_FOR_ATTENDANCE:
+                    print(f"   ✓ PASS: Distance < {threshold:.4f} AND Confidence >= {config.MIN_CONFIDENCE_FOR_ATTENDANCE:.0%}")
+
+                    if matched_student_id:
+                        student = self.student_repository.get_by_id(matched_student_id)
 
                         if student:
+                            # Additional validation: Check if top 3 results are consistent
+                            if len(results[0]) > 1:
+                                top_matches = results[0].head(3)
+                                print(f"   📊 Top 3 matches:")
+                                for idx, row in top_matches.iterrows():
+                                    match_id = self._extract_student_id_from_path(row['identity'])
+                                    match_conf = 1 - row['distance']
+                                    print(f"      {idx+1}. {match_id}: {match_conf:.2%} (dist: {row['distance']:.4f})")
+
                             return FaceRecognitionResult(
                                 success=True,
                                 student_id=student.student_id,
                                 student_name=student.full_name,
-                                confidence=1 - distance,  # Convert distance to confidence
+                                confidence=confidence,
                                 distance=distance,
                                 model_used=model_name,
                                 face_detected=True
                             )
                 else:
-                    print(f"   ✗ Distance {distance:.4f} > threshold {threshold:.4f}")
-                    print(f"   Tip: Face found but similarity too low. Try:")
-                    print(f"        - Re-register with better quality images")
-                    print(f"        - Use different model (Facenet512 recommended)")
+                    print(f"   ✗ REJECT: Match failed validation!")
+                    if distance >= threshold:
+                        print(f"      - Distance {distance:.4f} >= threshold {threshold:.4f}")
+                    if confidence < config.MIN_CONFIDENCE_FOR_ATTENDANCE:
+                        print(f"      - Confidence {confidence:.2%} < minimum {config.MIN_CONFIDENCE_FOR_ATTENDANCE:.0%}")
+                    print(f"   💡 Tips:")
+                    print(f"      - Register student with MORE high-quality images")
+                    print(f"      - Try different model (ArcFace recommended: best accuracy)")
+                    print(f"      - Ensure good lighting and face angle")
             else:
                 print(f"   ✗ No faces detected in database match")
                 print(f"   Possible causes:")
@@ -405,6 +435,47 @@ class FaceRecognitionService:
             return student_id
 
         return None
+
+    def _validate_database_has_images(self) -> bool:
+        """
+        Validate that database has at least one student with images
+        Also prints warning for students without images
+
+        Returns:
+            True if at least one student has images, False otherwise
+        """
+        students_path = config.STUDENT_DATABASE_PATH
+        if not os.path.exists(students_path):
+            return False
+
+        has_images = False
+        students_without_images = []
+
+        # Check each student directory
+        for student_id in os.listdir(students_path):
+            student_dir = os.path.join(students_path, student_id)
+
+            # Skip if not a directory
+            if not os.path.isdir(student_dir):
+                continue
+
+            # Count image files
+            image_files = [f for f in os.listdir(student_dir)
+                          if f.lower().endswith(('.jpg', '.jpeg', '.png', '.bmp'))]
+
+            if len(image_files) == 0:
+                students_without_images.append(student_id)
+            else:
+                has_images = True
+
+        # Print warning for students without images
+        if students_without_images:
+            print(f"\n⚠️  WARNING: Students without face images:")
+            for sid in students_without_images:
+                print(f"   - {sid} (0 images) - Cannot be recognized!")
+            print(f"   Please add images for these students using option 2 in menu.\n")
+
+        return has_images
 
     def verify_student(self, image_path: str, student_id: str) -> Dict[str, Any]:
         """
