@@ -25,9 +25,14 @@ class Config:
         self.DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///attendance.db')
 
         # Model Configuration
+        # Mặc định mô hình nhận diện khuôn mặt
         self.DEFAULT_MODEL = os.getenv('DEFAULT_MODEL', 'VGG-Face')
+        # Các mô hình nhận diện khuôn mặt có sẵn
         self.AVAILABLE_MODELS = ['VGG-Face', 'Facenet', 'ArcFace', 'Facenet512']
+        #hàm phát hiện khuôn mặt
         self.DETECTION_BACKEND = os.getenv('DETECTION_BACKEND', 'opencv')
+        # Khoảng cách để so sánh đặc trưng khuôn mặt
+        #os.getenv lấy giá trị từ biến môi trường, nếu không có thì sử dụng giá trị mặc định 'cosine'
         self.DISTANCE_METRIC = os.getenv('DISTANCE_METRIC', 'cosine')
 
         # Paths

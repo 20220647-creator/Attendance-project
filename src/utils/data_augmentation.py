@@ -13,28 +13,39 @@ import random
 
 class FaceDataAugmentation:
     """
-    Data Augmentation cho ảnh khuôn mặt
-    Tạo thêm ảnh training từ ảnh gốc để tăng độ chính xác
+    Lớp để thực hiện các kỹ thuật tăng cường dữ liệu cho ảnh khuôn mặt
+    1. Tăng độ sáng/độ tương phản
+    2. Thêm nhiễu Gaussian
+    3. Làm mờ nhẹ
+    4. Lật ngang
+    5. Xoay nhẹ
+    6. Điều chỉnh màu sắc nhẹ
+    7. Kết hợp các kỹ thuật trên để tạo đa dạng ảnh huấn luyện
+    8. Áp dụng các kỹ thuật từ VGGFace2 paper để cải thiện
     """
 
     def __init__(self):
+        # Các phương pháp augmentation có sẵn
         self.augmentation_methods = [
-            'brightness',
-            'contrast',
-            'blur',
-            'noise',
-            'flip',
-            'rotate',
-            'color_jitter'
+            'brightness', # độ sáng
+            'contrast', # độ tương phản
+            'blur', # làm mờ
+            'noise', # thêm nhiễu
+            'flip', # lật ngang
+            'rotate', # xoay nhẹ
+            'color_jitter' # điều chỉnh màu sắc nhẹ
         ]
 
+    # Các hàm augmentation riêng lẻ
+
+    # Độ sáng, với tham số factor_range để điều chỉnh mức độ sáng
     def augment_brightness(self, image: np.ndarray, factor_range: Tuple[float, float] = (0.7, 1.3)) -> np.ndarray:
         """Điều chỉnh độ sáng"""
-        pil_img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
-        factor = random.uniform(*factor_range)
-        enhancer = ImageEnhance.Brightness(pil_img)
-        enhanced = enhancer.enhance(factor)
-        return cv2.cvtColor(np.array(enhanced), cv2.COLOR_RGB2BGR)
+        pil_img = Image.fromarray(cv2.cvtColor(image, cv2.COLOR_BGR2RGB)) # Chuyển từ OpenCV BGR sang PIL RGB
+        factor = random.uniform(*factor_range) # Chọn ngẫu nhiên hệ số trong khoảng
+        enhancer = ImageEnhance.Brightness(pil_img) # Tạo bộ tăng cường độ sáng
+        enhanced = enhancer.enhance(factor) # Áp dụng tăng cường
+        return cv2.cvtColor(np.array(enhanced), cv2.COLOR_RGB2BGR) # Chuyển ngược lại sang OpenCV BGR
 
     def augment_contrast(self, image: np.ndarray, factor_range: Tuple[float, float] = (0.8, 1.2)) -> np.ndarray:
         """Điều chỉnh độ tương phản"""
@@ -77,20 +88,17 @@ class FaceDataAugmentation:
 
     def augment_image(self, image: np.ndarray, methods: List[str] = None) -> List[np.ndarray]:
         """
-        Tạo nhiều phiên bản augmented từ 1 ảnh
-
-        Args:
-            image: Ảnh gốc
-            methods: Danh sách methods muốn dùng (None = dùng tất cả)
-
-        Returns:
-            List các ảnh đã augmented
+        Phương thức chính để augment 1 ảnh với các kỹ thuật đã định nghĩa
         """
+
+        # Nếu không có phương thức cụ thể, sử dụng tất cả các phương thức
         if methods is None:
             methods = self.augmentation_methods
 
+        # Khởi tạo danh sách ảnh augmented ban đầu là rỗng
         augmented_images = []
 
+        # Áp dụng từng phương thức augmentation
         for method in methods:
             try:
                 if method == 'brightness':

@@ -1,84 +1,107 @@
 """
-Main application entry point
-Face Recognition Attendance System
+Điểm khởi động chính của ứng dụng
+Hệ thống điểm danh nhận diện khuôn mặt
 """
-import os
-import sys
-from datetime import date
+# Import các thư viện cần thiết
+import os  # Xử lý file và thư mục
+import sys  # Truy cập các tham số hệ thống
+from datetime import date  # Xử lý ngày tháng
 
+# Import các controller để xử lý logic
 from src.controllers.controllers import StudentController, AttendanceController, FaceRecognitionController
+# Import view để hiển thị giao diện
 from src.views.views import ConsoleView
+# Import các tiện ích
 from src.utils.utils import CameraUtility, ImageValidator
+# Import cấu hình
 from src.config.config import config
 
 
 class AttendanceApplication:
-    """Main application class"""
+    """Lớp ứng dụng chính điều khiển toàn bộ hệ thống"""
 
     def __init__(self):
-        self.student_controller = StudentController()
-        self.attendance_controller = AttendanceController()
-        self.face_controller = FaceRecognitionController()
-        self.view = ConsoleView()
-        self.running = True
-        self.current_model = config.DEFAULT_MODEL
+        """Khởi tạo ứng dụng với các controller và view"""
+        self.student_controller = StudentController()  # Controller quản lý sinh viên
+        self.attendance_controller = AttendanceController()  # Controller quản lý điểm danh
+        self.face_controller = FaceRecognitionController()  # Controller nhận diện khuôn mặt
+        self.view = ConsoleView()  # View hiển thị console
+        self.running = True  # Biến trạng thái chạy ứng dụng
+        self.current_model = config.DEFAULT_MODEL  # Mô hình nhận diện hiện tại
 
     def run(self):
-        """Run the main application loop"""
+        """Chạy vòng lặp chính của ứng dụng"""
+        # Hiển thị thông tin khởi tạo
         self.view.display_info(f"System initialized with model: {self.current_model}")
 
+        # Vòng lặp chính
         while self.running:
             try:
+                # Hiển thị menu
                 self.view.display_menu()
+                # Lấy lựa chọn từ người dùng
                 choice = self.view.get_choice()
 
+                # Xử lý lựa chọn
                 self.handle_choice(choice)
 
             except KeyboardInterrupt:
+                # Xử lý khi người dùng nhấn Ctrl+C
                 print("\n\nInterrupted by user")
                 self.running = False
             except Exception as e:
+                # Bắt các lỗi không mong muốn
                 self.view.display_error(f"Unexpected error: {str(e)}")
                 self.view.pause()
 
+        # Hiển thị lời chào tạm biệt
         print("\n" + "="*60)
         print("Thank you for using Face Recognition Attendance System!")
         print("="*60 + "\n")
 
     def handle_choice(self, choice: str):
-        """Handle user menu choice"""
+        """
+        Xử lý lựa chọn menu của người dùng
+
+        Args:
+            choice: Chuỗi lựa chọn từ người dùng
+        """
+        # Dictionary ánh xạ lựa chọn đến phương thức xử lý
         handlers = {
-            '1': self.register_student,
-            '2': self.add_face_image,
-            '3': self.view_student,
-            '4': self.list_students,
-            '5': self.update_student,
-            '6': self.delete_student,
-            '7': self.take_attendance_image,
-            '8': self.take_attendance_webcam,
-            '9': self.view_today_attendance,
-            '10': self.view_attendance_by_date,
-            '11': self.view_student_history,
-            '12': self.generate_report,
-            '13': self.change_model,
-            '14': self.view_models,
-            '15': self.test_recognition,
-            '0': self.exit_application
+            '1': self.register_student,  # Đăng ký sinh viên
+            '2': self.add_face_image,  # Thêm ảnh khuôn mặt
+            '3': self.view_student,  # Xem thông tin sinh viên
+            '4': self.list_students,  # Liệt kê sinh viên
+            '5': self.update_student,  # Cập nhật sinh viên
+            '6': self.delete_student,  # Xóa sinh viên
+            '7': self.take_attendance_image,  # Điểm danh từ ảnh
+            '8': self.take_attendance_webcam,  # Điểm danh từ webcam
+            '9': self.view_today_attendance,  # Xem điểm danh hôm nay
+            '10': self.view_attendance_by_date,  # Xem điểm danh theo ngày
+            '11': self.view_student_history,  # Xem lịch sử sinh viên
+            '12': self.generate_report,  # Tạo báo cáo
+            '13': self.change_model,  # Thay đổi mô hình
+            '14': self.view_models,  # Xem danh sách mô hình
+            '15': self.test_recognition,  # Kiểm tra nhận diện
+            '0': self.exit_application  # Thoát ứng dụng
         }
 
+        # Lấy hàm xử lý tương ứng
         handler = handlers.get(choice)
         if handler:
-            handler()
+            handler()  # Gọi hàm xử lý
         else:
+            # Lựa chọn không hợp lệ
             self.view.display_error("Invalid choice. Please try again.")
             self.view.pause()
 
     def register_student(self):
-        """Register a new student"""
+        """Đăng ký sinh viên mới"""
         print("\n" + "="*60)
         print("REGISTER NEW STUDENT")
         print("="*60)
 
+        # Lấy thông tin sinh viên từ người dùng
         student_id = self.view.get_input("Enter Student ID")
         if not student_id:
             self.view.display_error("Student ID cannot be empty")
@@ -94,6 +117,7 @@ class AttendanceApplication:
         class_name = self.view.get_input("Enter Class Name")
         email = self.view.get_input("Enter Email (optional)")
 
+        # Hỏi có muốn thêm ảnh khuôn mặt không
         image_choice = self.view.get_input("Add face images now? (y/n)").lower()
         image_paths = None
 

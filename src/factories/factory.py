@@ -12,7 +12,7 @@ from src.strategies.face_recognition_strategy import (
 
 
 class FaceRecognitionStrategyFactory:
-    """Factory for creating face recognition strategies"""
+    """Lớp factory để tạo các chiến lược nhận diện khuôn mặt khác nhau"""
 
     _strategies: Dict[str, Type[IFaceRecognitionStrategy]] = {
         'VGG-Face': VGGFaceStrategy,
@@ -21,22 +21,18 @@ class FaceRecognitionStrategyFactory:
         'Facenet512': Facenet512Strategy
     }
 
+    # @class method để tạo chiến lược dựa trên tên mô hình
     @classmethod
     def create_strategy(cls, model_name: str) -> IFaceRecognitionStrategy:
         """
-        Create a face recognition strategy based on model name
-
-        Args:
-            model_name: Name of the model ('VGG-Face', 'Facenet', 'ArcFace', 'Facenet512')
-
-        Returns:
-            Instance of the requested strategy
-
-        Raises:
-            ValueError: If model name is not supported
+        Định nghĩa phương thức tạo nhận diện khuôn mặt dựa trên tên mô hình
         """
+
+        # Tìm lớp chiến lược tương ứng với tên mô hình
+        # cls là tham chiếu đến lớp hiện tại
         strategy_class = cls._strategies.get(model_name)
 
+        # Nếu không tìm thấy, ném lỗi
         if strategy_class is None:
             available_models = ', '.join(cls._strategies.keys())
             raise ValueError(
@@ -46,6 +42,7 @@ class FaceRecognitionStrategyFactory:
 
         return strategy_class()
 
+    # @class method để lấy danh sách các mô hình có sẵn
     @classmethod
     def get_available_models(cls) -> list:
         """Get list of available model names"""

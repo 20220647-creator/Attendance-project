@@ -1,19 +1,23 @@
 """
-Controller layer for handling user interactions (MVC Pattern)
+Lớp Controller xử lý tương tác người dùng (Mẫu thiết kế MVC)
+Controller là tầng trung gian giữa View và Service/Model
 """
-from typing import Optional, Dict, Any, List
-from datetime import date
-import os
+# Import các thư viện cần thiết
+from typing import Optional, Dict, Any, List  # Type hints
+from datetime import date  # Xử lý ngày tháng
+import os  # Xử lý file và thư mục
 
+# Import các lớp Service và Model
 from src.services.services import StudentService, AttendanceService, FaceRecognitionService
 from src.models.models import Student, AttendanceRecord, FaceRecognitionResult
 
 
 class StudentController:
-    """Controller for student-related operations"""
+    """Controller quản lý các thao tác liên quan đến sinh viên"""
 
     def __init__(self):
-        self.service = StudentService()
+        """Khởi tạo StudentController với StudentService"""
+        self.service = StudentService()  # Khởi tạo service xử lý logic nghiệp vụ sinh viên
 
     def register_new_student(
         self,
@@ -25,20 +29,21 @@ class StudentController:
         image_paths: List[str] = None
     ) -> Dict[str, Any]:
         """
-        Register a new student
+        Đăng ký sinh viên mới
 
         Args:
-            student_id: Student ID
-            full_name: Full name
-            class_name: Class name
-            email: Email (optional)
-            image_path: Single image path (optional)
-            image_paths: Multiple image paths (optional)
+            student_id: Mã sinh viên
+            full_name: Họ tên đầy đủ
+            class_name: Tên lớp
+            email: Email (không bắt buộc)
+            image_path: Đường dẫn ảnh đơn (không bắt buộc)
+            image_paths: Danh sách đường dẫn ảnh (không bắt buộc)
 
         Returns:
-            Dictionary with status and message
+            Dictionary chứa trạng thái thành công/thất bại và thông điệp
         """
         try:
+            # Gọi service để đăng ký sinh viên
             student = self.service.register_student(
                 student_id=student_id,
                 full_name=full_name,
@@ -47,6 +52,7 @@ class StudentController:
                 image_path=image_path,
                 image_paths=image_paths
             )
+            # Đếm số lượng ảnh được thêm
             num_images = len(image_paths) if image_paths else (1 if image_path else 0)
             message = f'Student {student_id} registered successfully'
             if num_images > 0:
@@ -57,34 +63,36 @@ class StudentController:
                 'student': student
             }
         except ValueError as e:
+            # Bắt lỗi giá trị không hợp lệ (ví dụ: sinh viên đã tồn tại)
             return {
                 'success': False,
                 'message': str(e)
             }
         except Exception as e:
+            # Bắt các lỗi khác
             return {
                 'success': False,
                 'message': f'Error registering student: {str(e)}'
             }
 
     def add_face_image(self, student_id: str, image_path: str = None, image_paths: List[str] = None) -> Dict[str, Any]:
-        """Add or update face image(s) for a student"""
+        """Thêm hoặc cập nhật ảnh khuôn mặt cho sinh viên"""
         try:
-            # Check if any images provided
+            # Kiểm tra xem có ảnh nào được cung cấp không
             if not image_path and not image_paths:
                 return {
                     'success': False,
                     'message': 'No image provided'
                 }
 
-            # Validate single image
+            # Kiểm tra file ảnh đơn có tồn tại không
             if image_path and not os.path.exists(image_path):
                 return {
                     'success': False,
                     'message': 'Image file not found'
                 }
 
-            # Validate multiple images
+            # Kiểm tra các file ảnh trong danh sách
             if image_paths:
                 for img_path in image_paths:
                     if not os.path.exists(img_path):
@@ -93,6 +101,7 @@ class StudentController:
                             'message': f'Image file not found: {img_path}'
                         }
 
+            # Gọi service để thêm ảnh
             student = self.service.add_student_face_image(student_id, image_path, image_paths)
             num_images = len(image_paths) if image_paths else 1
             return {
@@ -112,7 +121,7 @@ class StudentController:
             }
 
     def get_student_info(self, student_id: str) -> Dict[str, Any]:
-        """Get student information"""
+        """Lấy thông tin sinh viên theo ID"""
         try:
             student = self.service.get_student(student_id)
             if student:
@@ -132,7 +141,7 @@ class StudentController:
             }
 
     def list_all_students(self) -> Dict[str, Any]:
-        """List all registered students"""
+        """Liệt kê tất cả sinh viên đã đăng ký"""
         try:
             students = self.service.get_all_students()
             return {
@@ -147,7 +156,7 @@ class StudentController:
             }
 
     def list_students_by_class(self, class_name: str) -> Dict[str, Any]:
-        """List all students in a class"""
+        """Liệt kê tất cả sinh viên trong một lớp"""
         try:
             students = self.service.get_students_by_class(class_name)
             return {
@@ -169,7 +178,7 @@ class StudentController:
         class_name: str = None,
         email: str = None
     ) -> Dict[str, Any]:
-        """Update student information"""
+        """Cập nhật thông tin sinh viên"""
         try:
             student = self.service.update_student(
                 student_id=student_id,
@@ -194,7 +203,7 @@ class StudentController:
             }
 
     def delete_student(self, student_id: str) -> Dict[str, Any]:
-        """Delete a student"""
+        """Xóa sinh viên khỏi hệ thống"""
         try:
             success = self.service.delete_student(student_id)
             if success:
@@ -215,11 +224,12 @@ class StudentController:
 
 
 class AttendanceController:
-    """Controller for attendance-related operations"""
+    """Controller quản lý các thao tác liên quan đến điểm danh"""
 
     def __init__(self):
-        self.service = AttendanceService()
-        self.recognition_service = FaceRecognitionService()
+        """Khởi tạo AttendanceController với các service cần thiết"""
+        self.service = AttendanceService()  # Service xử lý logic điểm danh
+        self.recognition_service = FaceRecognitionService()  # Service nhận diện khuôn mặt
 
     def take_attendance_from_image(
         self,
@@ -228,30 +238,32 @@ class AttendanceController:
         status: str = 'present'
     ) -> Dict[str, Any]:
         """
-        Take attendance by recognizing face from image
+        Điểm danh bằng cách nhận diện khuôn mặt từ ảnh
 
         Args:
-            image_path: Path to the image
-            model_name: Recognition model to use (optional)
-            status: Attendance status
+            image_path: Đường dẫn đến ảnh
+            model_name: Tên mô hình nhận diện sử dụng (không bắt buộc)
+            status: Trạng thái điểm danh (mặc định: 'present')
 
         Returns:
-            Dictionary with result
+            Dictionary chứa kết quả điểm danh
         """
         try:
+            # Kiểm tra file ảnh có tồn tại không
             if not os.path.exists(image_path):
                 return {
                     'success': False,
                     'message': 'Image file not found'
                 }
 
-            # Change model if specified
+            # Thay đổi mô hình nếu được chỉ định
             if model_name:
                 self.recognition_service.change_model(model_name)
 
-            # Recognize face
+            # Nhận diện khuôn mặt trong ảnh
             result = self.recognition_service.recognize_student(image_path)
 
+            # Nếu không nhận diện được sinh viên nào
             if not result.success:
                 return {
                     'success': False,
@@ -259,7 +271,7 @@ class AttendanceController:
                     'recognition_result': result
                 }
 
-            # Mark attendance
+            # Đánh dấu điểm danh
             try:
                 attendance = self.service.mark_attendance(
                     student_id=result.student_id,
@@ -278,6 +290,7 @@ class AttendanceController:
                     'attendance': attendance
                 }
             except ValueError as e:
+                # Lỗi khi đánh dấu điểm danh (ví dụ: đã điểm danh rồi)
                 return {
                     'success': False,
                     'message': str(e),
