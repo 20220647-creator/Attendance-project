@@ -265,9 +265,12 @@ class AttendanceController:
 
             # Nếu không nhận diện được sinh viên nào
             if not result.success:
+                # Lấy thông báo lỗi chi tiết từ result nếu có
+                error_message = getattr(result, 'error_message', None) or 'No student recognized in the image'
                 return {
                     'success': False,
-                    'message': 'No student recognized in the image',
+                    'recognized': False,  # Luôn trả về key này
+                    'message': error_message,
                     'recognition_result': result
                 }
 

@@ -1,77 +1,137 @@
 # 🎓 Face Recognition Attendance System
 
-Hệ thống điểm danh sinh viên tự động sử dụng công nghệ nhận diện khuôn mặt (Face Recognition) với **DeepFace**. Hỗ trợ 4 model AI tiên tiến: **VGG-Face**, **Facenet**, **ArcFace**, **Facenet512** với độ chính xác **95-98%** nhờ công nghệ **Multi-Sample Face Capture**.
+Hệ thống điểm danh sinh viên tự động sử dụng công nghệ nhận diện khuôn mặt (Face Recognition) với **DeepFace**. Hỗ trợ 4 model AI tiên tiến: **VGG-Face**, **Facenet**, **ArcFace**, **Facenet512** với độ chính xác **95-98%** nhờ công nghệ **Multi-Sample Face Capture** và **Data Augmentation**.
+
+> **📅 Last Updated: December 9, 2025**
 
 ---
 
 ## 📋 MỤC LỤC
 
 - [Tính năng nổi bật](#-tính-năng-nổi-bật)
+- [Yêu cầu hệ thống](#-yêu-cầu-hệ-thống)
 - [Cài đặt](#-cài-đặt)
 - [Sử dụng nhanh](#-sử-dụng-nhanh)
 - [Hướng dẫn chi tiết](#-hướng-dẫn-chi-tiết)
 - [So sánh Models](#-so-sánh-models)
 - [Data Augmentation](#-data-augmentation)
+- [Cấu hình nâng cao](#-cấu-hình-nâng-cao)
 - [Khắc phục sự cố](#-khắc-phục-sự-cố)
 - [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống)
-- [Cấu hình nâng cao](#-cấu-hình-nâng-cao)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ---
 
 ## ✨ Tính năng nổi bật
 
+### 🎯 Core Features
 - 🖱️ **Giao diện GUI hiện đại** - Tkinter dễ sử dụng, trực quan với buttons và dialog boxes
 - 📸 **Multi-Sample Capture** - Chụp 10 ảnh khi đăng ký để tăng độ chính xác lên 95-98%
-- 🎯 **4 Model AI tiên tiến** - VGG-Face, Facenet, ArcFace, Facenet512 với độ chính xác cao
-- 🔄 **Data Augmentation** - Tự động tạo ảnh training để cải thiện nhận diện
+- 🎯 **4 Model AI tiên tiến** - VGG-Face, Facenet, ArcFace, Facenet512
+- 🔄 **Data Augmentation** - Tự động tạo 80+ ảnh training để cải thiện nhận diện
 - 📊 **Báo cáo chi tiết** - Thống kê điểm danh theo ngày, sinh viên, xuất báo cáo
-- 🔄 **Linh hoạt** - Hỗ trợ cả webcam và upload file ảnh
+
+### 🔧 Technical Features
 - 🏗️ **Kiến trúc MVC** - Code sạch, áp dụng Design Patterns (MVC, Repository, Strategy, Factory)
 - 💾 **Database SQLite** - Lưu trữ an toàn, dễ backup
+- 🔄 **Linh hoạt** - Hỗ trợ cả webcam và upload file ảnh
+- ⚡ **Hiệu suất cao** - Nhận diện trong 1-2 giây
+- 🛡️ **Threshold tối ưu** - Ngưỡng được tinh chỉnh để giảm false positive
+
+### 📈 Accuracy Improvements
+| Tính năng | Độ chính xác |
+|-----------|--------------|
+| Single image | 85-90% |
+| Multi-sample (10 ảnh) | 92-95% |
+| + Data Augmentation | **95-98%** ⭐ |
+
+---
+
+## 💻 Yêu cầu hệ thống
+
+### Minimum Requirements
+| Component | Requirement |
+|-----------|-------------|
+| **OS** | Windows 10/11, Linux, MacOS |
+| **Python** | 3.8+ (khuyến nghị 3.10+) |
+| **RAM** | 4GB |
+| **Storage** | 2GB free space |
+| **Webcam** | Optional (cho chụp ảnh trực tiếp) |
+
+### Recommended Requirements
+| Component | Requirement |
+|-----------|-------------|
+| **OS** | Windows 11, Ubuntu 22.04+ |
+| **Python** | 3.10 - 3.12 |
+| **RAM** | 8GB+ |
+| **Storage** | 5GB+ SSD |
+| **Webcam** | 720p+ |
+| **GPU** | Optional (NVIDIA CUDA support) |
 
 ---
 
 ## 🚀 Cài đặt
 
-### Yêu cầu hệ thống
-- **Python**: 3.8 trở lên
-- **RAM**: 4GB+ (khuyến nghị 8GB+)
-- **Webcam**: Tùy chọn (cho chụp ảnh trực tiếp)
-- **HĐH**: Windows, Linux, MacOS
-
 ### Các bước cài đặt
 
 ```bash
 # 1. Clone hoặc download project
-cd your-project-folder
+git clone <repository-url>
+cd Attendance-project
 
 # 2. Tạo virtual environment (khuyến nghị)
 python -m venv .venv
 
 # 3. Kích hoạt virtual environment
 # Windows PowerShell:
-.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
 # Windows CMD:
-.venv\Scripts\activate.bat
+.\.venv\Scripts\activate.bat
 # Linux/Mac:
 source .venv/bin/activate
 
 # 4. Cài đặt dependencies
 pip install -r requirements.txt
 
-# 5. Tạo file .env (tùy chọn)
-# Copy từ .env.example và chỉnh sửa nếu cần
+# 5. (Optional) Copy file cấu hình môi trường
+copy .env.example .env
 ```
 
-### Cấu hình (Optional)
+### Dependencies chính
 
-Tạo file `.env` để tùy chỉnh:
+```txt
+deepface==0.0.93           # Face recognition framework
+opencv-python==4.10.0.84   # Computer vision library
+numpy>=1.26.4,<2.0.0       # Numerical computing
+pandas>=2.2.3              # Data manipulation
+Pillow>=10.4.0             # Image processing
+tensorflow>=2.17.1         # Deep learning backend
+mtcnn==1.0.0               # Face detection
+retina-face==0.0.17        # Face detection
+sqlalchemy>=2.0.35         # Database ORM
+python-dotenv>=1.0.1       # Environment variables
+tf-keras>=2.17.0           # Keras for TensorFlow
+```
+
+### Cấu hình môi trường (.env)
 
 ```env
+# Database
 DATABASE_URL=sqlite:///attendance.db
-DEFAULT_MODEL=VGG-Face
-NUM_FACE_SAMPLES=10          # Số ảnh mẫu khi đăng ký (5-15)
-SAMPLE_CAPTURE_DELAY=0.5     # Delay giữa các lần chụp (giây)
+
+# Model settings
+DEFAULT_MODEL=VGG-Face          # VGG-Face, Facenet, Facenet512, ArcFace
+DETECTION_BACKEND=opencv        # opencv, mtcnn, retinaface
+DISTANCE_METRIC=cosine          # cosine, euclidean, euclidean_l2
+
+# Paths
+STUDENT_DATABASE_PATH=data/students
+ATTENDANCE_LOG_PATH=data/attendance_logs
+
+# Multi-sample settings
+NUM_FACE_SAMPLES=10             # Số ảnh chụp khi đăng ký (5-15)
+SAMPLE_CAPTURE_DELAY=0.5        # Delay giữa các lần chụp (giây)
 ```
 
 ---
@@ -243,17 +303,32 @@ Menu → 15. Test Recognition
 
 | Model | Tốc độ | Chính xác (1 ảnh) | Chính xác (10 ảnh) | Threshold | Khuyến nghị |
 |-------|--------|-------------------|-------------------|-----------|-------------|
-| **VGG-Face** | Trung bình | 85-88% | 95-97% | 0.68 | Cân bằng tốt |
-| **Facenet** | Nhanh | 87-90% | 96-98% | 0.60 | ⭐ Default |
-| **Facenet512** | Nhanh | 90-93% | 97-99% | 0.50 | ⭐⭐ Chính xác nhất |
-| **ArcFace** | Chậm | 88-92% | 96-98% | 0.85 | Nhiều người |
+| **VGG-Face** | Trung bình | 85-88% | 95-97% | 0.50 | ⭐ Default |
+| **Facenet** | Nhanh | 87-90% | 96-98% | 0.45 | Tốc độ |
+| **Facenet512** | Nhanh | 90-93% | 97-99% | 0.40 | ⭐⭐ Chính xác nhất |
+| **ArcFace** | Chậm | 88-92% | 96-98% | 0.68 | Nhiều người |
 
 ### Lựa chọn model phù hợp
 
-- 🥇 **Facenet512** - Độ chính xác cao nhất (97-99%), tốc độ tốt → Production
-- 🥈 **Facenet** - Cân bằng tốt nhất giữa tốc độ và độ chính xác → Default
-- 🥉 **VGG-Face** - Ổn định, phù hợp cho hệ thống nhỏ
-- **ArcFace** - Yêu cầu phần cứng mạnh, tốt cho database lớn
+- 🥇 **Facenet512** - Độ chính xác cao nhất (97-99%), threshold = 0.40 → Production
+- 🥈 **Facenet** - Cân bằng tốt, threshold = 0.45 → Tốc độ ưu tiên
+- 🥉 **VGG-Face** - Ổn định, threshold = 0.50 → Default, hệ thống nhỏ
+- **ArcFace** - Threshold = 0.68, tốt cho database lớn
+
+### Recognition Thresholds (Cập nhật)
+
+```python
+# Threshold càng thấp = Càng khắt khe (giảm false positive)
+RECOGNITION_THRESHOLD = {
+    'VGG-Face': 0.50,      # Stricter than original 0.68
+    'Facenet': 0.45,       # Stricter than original 0.60
+    'Facenet512': 0.40,    # Stricter than original 0.50
+    'ArcFace': 0.68        # Stricter than original 0.85
+}
+
+# Minimum confidence cho điểm danh hợp lệ
+MIN_CONFIDENCE_FOR_ATTENDANCE = 0.60  # 60%
+```
 
 ---
 
@@ -576,15 +651,19 @@ Attendance-project/
 
 ### Điều chỉnh threshold (config.py)
 
-Threshold càng cao = khắt khe hơn (giảm false positive nhưng tăng false negative)
+Threshold càng thấp = khắt khe hơn (giảm false positive nhưng tăng false negative)
 
 ```python
+# Threshold hiện tại (đã được tối ưu để giảm false positive)
 self.RECOGNITION_THRESHOLD = {
-    'VGG-Face': 0.68,     # Giảm = khắt khe hơn
-    'Facenet': 0.60,      # Tăng = dễ dàng hơn  
-    'Facenet512': 0.50,   # Default
-    'ArcFace': 0.85       # Cao = yêu cầu tương đồng cao
+    'VGG-Face': 0.50,     # Stricter: was 0.68
+    'Facenet': 0.45,      # Stricter: was 0.60  
+    'Facenet512': 0.40,   # Stricter: was 0.50
+    'ArcFace': 0.68       # Stricter: was 0.85
 }
+
+# Minimum confidence để điểm danh hợp lệ (60%)
+MIN_CONFIDENCE_FOR_ATTENDANCE = 0.60
 ```
 
 ### Điều chỉnh số ảnh mẫu (.env)
@@ -597,7 +676,9 @@ SAMPLE_CAPTURE_DELAY=0.5     # Delay giữa các lần chụp (giây)
 ### Thay đổi model mặc định (.env)
 
 ```env
-DEFAULT_MODEL=Facenet512     # VGG-Face, Facenet, Facenet512, ArcFace
+DEFAULT_MODEL=VGG-Face       # VGG-Face, Facenet, Facenet512, ArcFace
+DETECTION_BACKEND=opencv     # opencv, mtcnn, retinaface
+DISTANCE_METRIC=cosine       # cosine, euclidean, euclidean_l2
 ```
 
 ---
@@ -834,5 +915,5 @@ Nếu gặp vấn đề hoặc có câu hỏi:
 
 **Made with ❤️ using Python, DeepFace, OpenCV, and Tkinter**
 
-*Last updated: December 5, 2025*
+*Last updated: December 9, 2025*
 

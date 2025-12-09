@@ -481,6 +481,33 @@ class FaceRecognitionService:
                                 model_used=model_name,
                                 face_detected=True
                             )
+                        else:
+                            # Sinh viên có ảnh nhưng KHÔNG TỒN TẠI trong database
+                            print(f"   ⚠ WARNING: Face matched but student {matched_student_id} NOT FOUND in database!")
+                            print(f"   💡 Solution: Register student {matched_student_id} using 'Register new student' option")
+                            return FaceRecognitionResult(
+                                success=False,
+                                student_id=matched_student_id,
+                                student_name=None,
+                                confidence=confidence,
+                                distance=distance,
+                                model_used=model_name,
+                                error_message=f"Face recognized as {matched_student_id} but student not registered in database. Please register this student first.",
+                                face_detected=True
+                            )
+                    else:
+                        # Không trích xuất được student_id từ đường dẫn
+                        print(f"   ⚠ WARNING: Could not extract student ID from path!")
+                        return FaceRecognitionResult(
+                            success=False,
+                            student_id=None,
+                            student_name=None,
+                            confidence=confidence,
+                            distance=distance,
+                            model_used=model_name,
+                            error_message="Could not extract student ID from matched image path.",
+                            face_detected=True
+                        )
                 else:
                     # Kết quả không đạt ngưỡng
                     print(f"   ✗ REJECT: Match failed validation!")
